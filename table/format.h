@@ -70,6 +70,7 @@ class Footer {
   BlockHandle index_handle_;
 };
 
+static const uint64_t lifeTime = 100;
 // kTableMagicNumber was picked by running
 //    echo http://code.google.com/p/leveldb/ | sha1sum
 // and taking the leading 64 bits.

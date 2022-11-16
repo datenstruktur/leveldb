@@ -16,6 +16,7 @@
 
 #include "leveldb/slice.h"
 #include "util/hash.h"
+#include "unit_handle_block.h"
 
 namespace leveldb {
 
@@ -29,7 +30,7 @@ class FilterPolicy;
 //      (StartBlock AddKey*)* Finish
 class FilterBlockBuilder {
  public:
-  explicit FilterBlockBuilder(const FilterPolicy*);
+  explicit FilterBlockBuilder(const FilterPolicy* policy, WritableFile *file, uint64_t *offset);
 
   FilterBlockBuilder(const FilterBlockBuilder&) = delete;
   FilterBlockBuilder& operator=(const FilterBlockBuilder&) = delete;
@@ -47,12 +48,16 @@ class FilterBlockBuilder {
   std::string result_;           // Filter data computed so far
   std::vector<Slice> tmp_keys_;  // policy_->CreateFilter() argument
   std::vector<uint32_t> filter_offsets_;
+
+  UnitHandleBlockBuilder *builder_;
+  WritableFile *file_;
+  uint64_t *offset_;
 };
 
 class FilterBlockReader {
  public:
   // REQUIRES: "contents" and *policy must stay live while *this is live.
-  FilterBlockReader(const FilterPolicy* policy, const Slice& contents);
+  FilterBlockReader(const FilterPolicy* policy, const Slice& contents, RandomAccessFile *file, ReadOptions options);
   bool KeyMayMatch(uint64_t block_offset, const Slice& key);
 
  private:
@@ -61,6 +66,11 @@ class FilterBlockReader {
   const char* offset_;  // Pointer to beginning of offset array (at block-end)
   size_t num_;          // Number of entries in offset array
   size_t base_lg_;      // Encoding parameter (see kFilterBaseLg in .cc file)
+
+  UnitHandleBlockReader *reader_;
+  RandomAccessFile *file_;
+  ReadOptions options_;
+
 };
 
 }  // namespace leveldb

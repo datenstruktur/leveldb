@@ -15,8 +15,15 @@ namespace leveldb {
 static const size_t kFilterBaseLg = 11;
 static const size_t kFilterBase = 1 << kFilterBaseLg;
 
-FilterBlockBuilder::FilterBlockBuilder(const FilterPolicy* policy)
-    : policy_(policy) {}
+FilterBlockBuilder::FilterBlockBuilder(const FilterPolicy* policy,
+                                       WritableFile *file,
+                                       uint64_t *offset)
+    : policy_(policy),
+      file_(file),
+      offset_(offset),
+      builder_(nullptr){
+  builder_ = new UnitHandleBlockBuilder(policy_, file_, offset_, 0, 0, 20);
+}
 
 void FilterBlockBuilder::StartBlock(uint64_t block_offset) {
   uint64_t filter_index = (block_offset / kFilterBase);
@@ -68,6 +75,8 @@ void FilterBlockBuilder::GenerateFilter() {
   // Generate filter for current set of keys and append to result_.
   filter_offsets_.push_back(result_.size());
   policy_->CreateFilter(&tmp_keys_[0], static_cast<int>(num_keys), &result_, 0);
+  //std::string block = builder_->Finish(tmp_keys_);
+  //result_.append(block.data(), block.size());
 
   tmp_keys_.clear();
   keys_.clear();
@@ -75,8 +84,10 @@ void FilterBlockBuilder::GenerateFilter() {
 }
 
 FilterBlockReader::FilterBlockReader(const FilterPolicy* policy,
-                                     const Slice& contents)
-    : policy_(policy), data_(nullptr), offset_(nullptr), num_(0), base_lg_(0) {
+                                     const Slice& contents,
+                                     RandomAccessFile *file,
+                                     ReadOptions options)
+    : policy_(policy), data_(nullptr), offset_(nullptr), num_(0), base_lg_(0), file_(file), options_(options) {
   size_t n = contents.size();
   if (n < 5) return;  // 1 byte for base_lg_ and 4 for start of offset array
   base_lg_ = contents[n - 1];
@@ -94,6 +105,8 @@ bool FilterBlockReader::KeyMayMatch(uint64_t block_offset, const Slice& key) {
     uint32_t limit = DecodeFixed32(offset_ + index * 4 + 4);
     if (start <= limit && limit <= static_cast<size_t>(offset_ - data_)) {
       Slice filter = Slice(data_ + start, limit - start);
+      //reader_ = new UnitHandleBlockReader(policy_, file_, options_, filter, 10);
+      //reader_->KeyMayMatch(key);
       return policy_->KeyMayMatch(key, filter, 0);
     } else if (start == limit) {
       // Empty filters do not match any keys

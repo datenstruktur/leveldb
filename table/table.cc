@@ -128,7 +128,7 @@ void Table::ReadFilter(const Slice& filter_handle_value) {
   if (block.heap_allocated) {
     rep_->filter_data = block.data.data();  // Will need to delete later
   }
-  rep_->filter = new FilterBlockReader(rep_->options.filter_policy, block.data);
+  rep_->filter = new FilterBlockReader(rep_->options.filter_policy, block.data, rep_->file, opt);
 }
 
 Table::~Table() { delete rep_; }

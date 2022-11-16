@@ -159,6 +159,8 @@ target_sources(leveldb
     "table/block.h"
     "table/filter_block.cc"
     "table/filter_block.h"
+    "table/unit_handle_block.h"
+    "table/unit_handle_block.cc"
     "table/format.cc"
     "table/format.h"
     "table/iterator_wrapper.h"

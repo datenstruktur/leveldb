@@ -30,7 +30,7 @@ struct TableBuilder::Rep {
         closed(false),
         filter_block(opt.filter_policy == nullptr
                          ? nullptr
-                         : new FilterBlockBuilder(opt.filter_policy)),
+                         : new FilterBlockBuilder(opt.filter_policy, f, &offset)),
         pending_index_entry(false) {
     index_block_options.block_restart_interval = 1;
   }
