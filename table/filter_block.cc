@@ -74,9 +74,9 @@ void FilterBlockBuilder::GenerateFilter() {
 
   // Generate filter for current set of keys and append to result_.
   filter_offsets_.push_back(result_.size());
-  policy_->CreateFilter(&tmp_keys_[0], static_cast<int>(num_keys), &result_, 0);
-  //std::string block = builder_->Finish(tmp_keys_);
-  //result_.append(block.data(), block.size());
+  //policy_->CreateFilter(&tmp_keys_[0], static_cast<int>(num_keys), &result_, 0);
+  std::string block = builder_->Finish(tmp_keys_);
+  result_.append(block.data(), block.size());
 
   tmp_keys_.clear();
   keys_.clear();
@@ -105,9 +105,9 @@ bool FilterBlockReader::KeyMayMatch(uint64_t block_offset, const Slice& key) {
     uint32_t limit = DecodeFixed32(offset_ + index * 4 + 4);
     if (start <= limit && limit <= static_cast<size_t>(offset_ - data_)) {
       Slice filter = Slice(data_ + start, limit - start);
-      //reader_ = new UnitHandleBlockReader(policy_, file_, options_, filter, 10);
-      //reader_->KeyMayMatch(key);
-      return policy_->KeyMayMatch(key, filter, 0);
+      reader_ = new UnitHandleBlockReader(policy_, file_, options_, filter, 10);
+      reader_->KeyMayMatch(key);
+      //return policy_->KeyMayMatch(key, filter, 0);
     } else if (start == limit) {
       // Empty filters do not match any keys
       return false;
